@@ -32,6 +32,8 @@ const normalizeApiBaseUrl = (value) => {
   return url.toString().replace(/\/+$/, '')
 }
 
+const PRODUCTION_API_FALLBACK = 'https://filenest-backend-kk8m.onrender.com/api'
+
 const detectDefaultApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname
@@ -40,10 +42,11 @@ const detectDefaultApiBaseUrl = () => {
       return 'http://localhost:5000/api'
     }
 
-    return `${window.location.origin}/api`
+    // In deployed frontend environments, always prefer backend host.
+    return PRODUCTION_API_FALLBACK
   }
 
-  return 'http://localhost:5000/api'
+  return PRODUCTION_API_FALLBACK
 }
 
 const envApiBase = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL)
