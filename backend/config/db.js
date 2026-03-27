@@ -12,21 +12,26 @@ const resolveEnv = (...names) => {
   return undefined
 }
 
-const db = mysql.createConnection({
+const db = mysql.createPool({
   host: resolveEnv('MYSQLHOST', 'DB_HOST'),
   user: resolveEnv('MYSQLUSER', 'DB_USER'),
   password: resolveEnv('MYSQLPASSWORD', 'DB_PASSWORD'),
   database: resolveEnv('MYSQLDATABASE', 'DB_NAME'),
-  port: Number(resolveEnv('MYSQLPORT', 'DB_PORT') || 3306)
+  port: Number(resolveEnv('MYSQLPORT', 'DB_PORT') || 3306),
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 })
 
 const activeDatabase = resolveEnv('MYSQLDATABASE', 'DB_NAME')
 
-db.connect((error) => {
+db.getConnection((error, connection) => {
   if (error) {
     console.error('Railway MySQL connection failed:', error.message)
     return
   }
+
+  connection.release()
 
   console.log('Connected to Railway MySQL')
 
