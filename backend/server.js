@@ -6,6 +6,23 @@ import authRoutes from './routes/authRoutes.js'
 import fileRoutes from './routes/fileRoutes.js'
 import "./config/db.js";
 
+const parseAllowedOrigins = () => {
+  const configuredOrigins = String(
+    process.env.CORS_ORIGIN || process.env.FRONTEND_URL || ''
+  )
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+
+  if (configuredOrigins.length === 0) {
+    return ['http://localhost:5173']
+  }
+
+  return configuredOrigins
+}
+
+const allowedOrigins = parseAllowedOrigins()
+
 // Initialize Express app
 const app = express()
 
@@ -13,7 +30,22 @@ const app = express()
 app.set('trust proxy', true)
 
 // Middleware
-app.use(cors())
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow server-to-server tools and non-browser requests with no Origin header.
+      if (!origin) {
+        return callback(null, true)
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true)
+      }
+
+      return callback(new Error('Not allowed by CORS'))
+    }
+  })
+)
 app.use(express.json())
 
 // Root route
@@ -40,4 +72,5 @@ app.use('/api/files', fileRoutes)
 app.listen(config.port, () => {
   console.log(`FileNest Backend Server running on port ${config.port}`)
   console.log(`Environment: ${config.nodeEnv}`)
+  console.log(`CORS origins: ${allowedOrigins.join(', ')}`)
 })

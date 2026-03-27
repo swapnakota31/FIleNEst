@@ -16,6 +16,22 @@ const ensureProtocol = (value) => {
   return `https://${raw}`
 }
 
+const normalizeApiBaseUrl = (value) => {
+  const withProtocol = ensureProtocol(value)
+
+  if (!withProtocol) {
+    return ''
+  }
+
+  const url = new URL(withProtocol)
+
+  if (url.pathname === '/' || url.pathname === '') {
+    url.pathname = '/api'
+  }
+
+  return url.toString().replace(/\/+$/, '')
+}
+
 const detectDefaultApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname
@@ -30,7 +46,7 @@ const detectDefaultApiBaseUrl = () => {
   return 'http://localhost:5000/api'
 }
 
-const envApiBase = ensureProtocol(import.meta.env.VITE_API_BASE_URL)
+const envApiBase = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL)
 
 export const API_BASE_URL = (envApiBase || detectDefaultApiBaseUrl()).replace(/\/+$/, '')
 export const AUTH_API_BASE_URL = `${API_BASE_URL}/auth`

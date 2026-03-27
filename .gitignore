@@ -11,6 +11,8 @@ backend/dist/
 .env.*
 backend/.env
 backend/.env.*
+!.env.example
+!backend/.env.example
 
 # Runtime uploads and logs
 backend/uploads/

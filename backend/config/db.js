@@ -1,12 +1,26 @@
 import mysql from 'mysql2'
 
+const resolveEnv = (...names) => {
+  for (const name of names) {
+    const value = process.env[name]
+
+    if (typeof value === 'string' && value.trim()) {
+      return value
+    }
+  }
+
+  return undefined
+}
+
 const db = mysql.createConnection({
-  host: process.env.MYSQLHOST,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT
+  host: resolveEnv('MYSQLHOST', 'DB_HOST'),
+  user: resolveEnv('MYSQLUSER', 'DB_USER'),
+  password: resolveEnv('MYSQLPASSWORD', 'DB_PASSWORD'),
+  database: resolveEnv('MYSQLDATABASE', 'DB_NAME'),
+  port: Number(resolveEnv('MYSQLPORT', 'DB_PORT') || 3306)
 })
+
+const activeDatabase = resolveEnv('MYSQLDATABASE', 'DB_NAME')
 
 db.connect((error) => {
   if (error) {
@@ -86,7 +100,7 @@ db.connect((error) => {
       AND COLUMN_NAME = 'reset_token'
     `
 
-    db.query(findResetTokenColumnQuery, [process.env.MYSQLDATABASE], (resetTokenLookupError, resetTokenColumns) => {
+    db.query(findResetTokenColumnQuery, [activeDatabase], (resetTokenLookupError, resetTokenColumns) => {
       if (resetTokenLookupError) {
         console.error('Error checking reset_token column:', resetTokenLookupError.message)
         return
@@ -103,7 +117,7 @@ db.connect((error) => {
 
         db.query(
           findResetTokenExpiryColumnQuery,
-          [process.env.MYSQLDATABASE],
+          [activeDatabase],
           (resetTokenExpiryLookupError, resetTokenExpiryColumns) => {
             if (resetTokenExpiryLookupError) {
               console.error(
