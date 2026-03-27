@@ -23,6 +23,35 @@ const parseAllowedOrigins = () => {
 
 const allowedOrigins = parseAllowedOrigins()
 
+const isAllowedOrigin = (origin) => {
+  if (allowedOrigins.includes(origin)) {
+    return true
+  }
+
+  let requestUrl
+
+  try {
+    requestUrl = new URL(origin)
+  } catch {
+    return false
+  }
+
+  return allowedOrigins.some((allowedOrigin) => {
+    if (!allowedOrigin.includes('*')) {
+      return false
+    }
+
+    // Supports patterns like https://*.vercel.app
+    const escaped = allowedOrigin
+      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*/g, '.*')
+    const pattern = new RegExp(`^${escaped}$`, 'i')
+    const normalizedRequestOrigin = `${requestUrl.protocol}//${requestUrl.host}`
+
+    return pattern.test(normalizedRequestOrigin)
+  })
+}
+
 // Initialize Express app
 const app = express()
 
@@ -38,7 +67,7 @@ app.use(
         return callback(null, true)
       }
 
-      if (allowedOrigins.includes(origin)) {
+      if (isAllowedOrigin(origin)) {
         return callback(null, true)
       }
 
