@@ -5,9 +5,19 @@ import cloudinary from '../config/cloudinary.js'
 export const uploadFile = (req, res) => {
   const userId = req.user.userId
 
+  console.log('Upload controller start', {
+    file: req.file,
+    body: req.body,
+    user: req.user
+  })
+
   if (!req.file) {
     return res.status(400).json({ message: 'File is required' })
   }
+
+  console.log('Cloudinary upload completed and file is available in request', {
+    file: req.file
+  })
 
   // Extract Cloudinary data from multer-storage-cloudinary
   // req.file.path is the secure_url from Cloudinary
@@ -32,13 +42,32 @@ export const uploadFile = (req, res) => {
     req.file.size
   ]
 
+  console.log('Preparing database insert for uploaded file', {
+    insertQuery: insertQuery.trim(),
+    values
+  })
+
   db.query(insertQuery, values, (error, result) => {
     if (error) {
+      console.error('Database insert error for uploaded file:', error)
+      console.dir(error, { depth: null })
+      console.error(JSON.stringify(error, null, 2))
       return res.status(500).json({
-        message: 'Server error',
+        message: 'Upload failed',
         error: error.message
       })
     }
+
+    console.log('Database insert successful for uploaded file', {
+      insertId: result.insertId,
+      file: {
+        originalname: req.file.originalname,
+        filename: req.file.filename,
+        path: req.file.path,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      }
+    })
 
     return res.status(201).json({
       message: 'File uploaded successfully',
@@ -66,6 +95,9 @@ export const getFiles = (req, res) => {
 
   db.query(query, [userId], (error, files) => {
     if (error) {
+      console.error('getFiles query error:', error)
+      console.dir(error, { depth: null })
+      console.error(JSON.stringify(error, null, 2))
       return res.status(500).json({ message: 'Server error', error: error.message })
     }
 
@@ -86,6 +118,9 @@ export const getRecentFiles = (req, res) => {
 
   db.query(query, [userId], (error, files) => {
     if (error) {
+      console.error('getRecentFiles query error:', error)
+      console.dir(error, { depth: null })
+      console.error(JSON.stringify(error, null, 2))
       return res.status(500).json({ message: 'Server error', error: error.message })
     }
 
@@ -123,6 +158,9 @@ export const softDeleteFile = (req, res) => {
 
     db.query(updateQuery, [fileId], (updateError) => {
       if (updateError) {
+        console.error('softDeleteFile update query error:', updateError)
+        console.dir(updateError, { depth: null })
+        console.error(JSON.stringify(updateError, null, 2))
         return res.status(500).json({ message: 'Server error', error: updateError.message })
       }
 
@@ -143,6 +181,9 @@ export const getDeletedFiles = (req, res) => {
 
   db.query(query, [userId], (error, files) => {
     if (error) {
+      console.error('getDeletedFiles query error:', error)
+      console.dir(error, { depth: null })
+      console.error(JSON.stringify(error, null, 2))
       return res.status(500).json({ message: 'Server error', error: error.message })
     }
 
@@ -180,6 +221,9 @@ export const restoreFile = (req, res) => {
 
     db.query(updateQuery, [fileId], (updateError) => {
       if (updateError) {
+        console.error('restoreFile update query error:', updateError)
+        console.dir(updateError, { depth: null })
+        console.error(JSON.stringify(updateError, null, 2))
         return res.status(500).json({ message: 'Server error', error: updateError.message })
       }
 
@@ -210,10 +254,15 @@ export const permanentlyDeleteFile = (req, res) => {
     }
 
     // Delete file from Cloudinary using stored_name (public_id)
+    console.log('Calling Cloudinary destroy for stored_name', { storedName: file.stored_name })
     cloudinary.uploader.destroy(file.stored_name, (destroyError, destroyResult) => {
       if (destroyError) {
         console.error('Cloudinary deletion error:', destroyError)
+        console.dir(destroyError, { depth: null })
+        console.error(JSON.stringify(destroyError, null, 2))
         // Continue with DB deletion even if Cloudinary deletion fails
+      } else {
+        console.log('Cloudinary destroy result:', destroyResult)
       }
 
       // Delete file record from database
@@ -221,6 +270,9 @@ export const permanentlyDeleteFile = (req, res) => {
 
       db.query(deleteQuery, [fileId], (deleteError) => {
         if (deleteError) {
+          console.error('permanentlyDeleteFile delete query error:', deleteError)
+          console.dir(deleteError, { depth: null })
+          console.error(JSON.stringify(deleteError, null, 2))
           return res.status(500).json({ message: 'Server error', error: deleteError.message })
         }
 
@@ -245,6 +297,9 @@ export const getFileStats = (req, res) => {
 
   db.query(statsQuery, [userId], (statsError, rows) => {
     if (statsError) {
+      console.error('getFileStats query error:', statsError)
+      console.dir(statsError, { depth: null })
+      console.error(JSON.stringify(statsError, null, 2))
       return res.status(500).json({ message: 'Server error', error: statsError.message })
     }
 
@@ -268,6 +323,9 @@ export const shareFile = (req, res) => {
 
   db.query(findQuery, [fileId], (findError, files) => {
     if (findError) {
+      console.error('shareFile find query error:', findError)
+      console.dir(findError, { depth: null })
+      console.error(JSON.stringify(findError, null, 2))
       return res.status(500).json({ message: 'Server error', error: findError.message })
     }
 
@@ -301,6 +359,9 @@ export const shareFile = (req, res) => {
 
     db.query(updateQuery, [shareToken, shareExpiry, fileId], (updateError) => {
       if (updateError) {
+        console.error('shareFile update query error:', updateError)
+        console.dir(updateError, { depth: null })
+        console.error(JSON.stringify(updateError, null, 2))
         return res.status(500).json({ message: 'Server error', error: updateError.message })
       }
 
@@ -334,6 +395,9 @@ export const unshareFile = (req, res) => {
 
   db.query(findQuery, [fileId], (findError, files) => {
     if (findError) {
+      console.error('unshareFile find query error:', findError)
+      console.dir(findError, { depth: null })
+      console.error(JSON.stringify(findError, null, 2))
       return res.status(500).json({ message: 'Server error', error: findError.message })
     }
 
@@ -352,6 +416,9 @@ export const unshareFile = (req, res) => {
 
     db.query(updateQuery, [fileId], (updateError) => {
       if (updateError) {
+        console.error('unshareFile update query error:', updateError)
+        console.dir(updateError, { depth: null })
+        console.error(JSON.stringify(updateError, null, 2))
         return res.status(500).json({ message: 'Server error', error: updateError.message })
       }
 
@@ -372,6 +439,9 @@ export const getSharedFile = (req, res) => {
 
   db.query(query, [token], (error, files) => {
     if (error) {
+      console.error('getSharedFile query error:', error)
+      console.dir(error, { depth: null })
+      console.error(JSON.stringify(error, null, 2))
       return res.status(500).json({ message: 'Server error', error: error.message })
     }
 
@@ -411,6 +481,9 @@ export const downloadSharedFile = (req, res) => {
 
   db.query(query, [token], (error, files) => {
     if (error) {
+      console.error('downloadSharedFile query error:', error)
+      console.dir(error, { depth: null })
+      console.error(JSON.stringify(error, null, 2))
       return res.status(500).json({ message: 'Server error', error: error.message })
     }
 
