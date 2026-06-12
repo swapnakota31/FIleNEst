@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import db from '../config/db.js'
 import cloudinary from '../config/cloudinary.js'
-
+//this file contains all the logic for handling file-related operations, including uploading, retrieving, sharing, and deleting files. Each function corresponds to a specific API endpoint and interacts with the database and Cloudinary as needed. The functions also include comprehensive error handling and logging for easier debugging and maintenance.
 export const uploadFile = (req, res) => {
   const userId = req.user.userId
 

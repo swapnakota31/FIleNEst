@@ -18,6 +18,7 @@ git push -u origin main
 ## 2) Deploy Backend (Render)
 
 Option A: Blueprint deploy
+kleepmvp
 - In Render, choose New > Blueprint.
 - Connect your GitHub repo.
 - Render will read render.yaml.
