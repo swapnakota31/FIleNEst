@@ -234,10 +234,7 @@ function Dashboard() {
         <p>{user?.email || 'No email available'}</p>
 
         <div className="storage-progress-wrap">
-          <div className="storage-progress-header">
-            <span>Storage usage</span>
-            <span>{storagePercent}%</span>
-          </div>
+          
           <div className="storage-progress-track">
             <motion.span
               className="storage-progress-fill"
